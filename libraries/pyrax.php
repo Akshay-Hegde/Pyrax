@@ -16,6 +16,8 @@ class Pyrax {
 		// Pyrax variables        
         $this->_title 	= Settings::get('site_name');
         $this->_data 	= array();
+        
+        
     }
 
     public function build($template, $data = null) {
@@ -34,10 +36,12 @@ class Pyrax {
 		
 		} else {
 		
+			$appData = rawUrlEncode(json_encode($data));
+		
 			$this->ci->template->title($this->_title)
 				->set('templatesPath', $this->ci->module_details['path'] . '/views/templates/')
-				->set('appview', $data)
-				->build('pyrax/appview');
+				->set('appData', $appData)
+				->build('pyrax/app');
 		}
 
 	}
@@ -55,8 +59,12 @@ class Pyrax {
 		return $this;
 	}
 
-	public function title($title) {
+	public function title($title = false) {
+		
+		if(!$title) return $this->_title;
+		
 		$this->_title = $title;
+		return $this;
 	}
 	
 }

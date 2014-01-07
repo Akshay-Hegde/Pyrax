@@ -1,4 +1,4 @@
-function AjaxApplication(enabled, appViewID, appView) {
+function PyraxApp(appViewID, appView) {
 	
 	var appView = JSON.parse(decodeURIComponent(appView));
 	if(appView.template == 'undefined') return false;
@@ -10,10 +10,10 @@ function AjaxApplication(enabled, appViewID, appView) {
 
 	function init() {
 	
-		if(enabled === true) {
-			setEventListeners();
-			$('body').prepend($(loader).hide().addClass('ajaxLoader'));
-		}
+
+		setEventListeners();
+
+		$('body').prepend($(loader).hide().addClass('ajaxLoader'));
 		
 		$('#' + appViewID).html(Mustache.render(templateHTML, appView.data));
 		History.pushState({template: appView.template}, appView.template, window.location.href);
@@ -26,6 +26,11 @@ function AjaxApplication(enabled, appViewID, appView) {
 	
 	function setEventListeners() {
 	
+		$(document).on('loadFail', function() {
+			
+		});
+		
+	
 	    History.Adapter.bind(window,'statechange',function(){
 			var targetID 	= appViewID;
 	        var State = History.getState();
@@ -37,6 +42,10 @@ function AjaxApplication(enabled, appViewID, appView) {
 				var newhref = $(this).attr('href');
 				History.pushState({template: template}, template, newhref);
 				event.preventDefault();
+			} else {
+				// For safari web apps
+				event.preventDefault();
+				window.location = $(this).attr("href");
 			}
 		});
 		
@@ -92,10 +101,13 @@ function AjaxApplication(enabled, appViewID, appView) {
         });
         
 	}
+
+	function takingLong() {
+	    $(".ajaxLoader").fadeIn(40);
+	}
 	
-	function tooLong() {
-	    // What should we do when something's taking too long?  Perhaps show a `<div>` with some instructions?
-	    $(".ajaxLoader").fadeIn(100);
+	function takingTooLong(href) {
+		window.location = href;
 	}
 	
 	function ajaxSuccess() {
@@ -104,27 +116,41 @@ function AjaxApplication(enabled, appViewID, appView) {
 	
 	function loadLink(href, template, targetID, inputMethod) {
 		
-		$('#'+ targetID).fadeOut(60);
 		var target = $('#'+ targetID);
 		var templateHTML = $(templatePrefix + template).html();
-        var timer = setTimeout(tooLong, 100);
         
+        var timer = setTimeout(takingLong, 80);
+        var timerTooLong = setTimeout(function() {
+        	takingTooLong(href);
+        }, 4000);
+        
+		$('#'+ targetID).fadeOut(60);
+		
 		$.ajax({
 	        "url": href,
 	    	success: function(data){
-		        	var data = JSON.parse(data);
-		            var html = Mustache.render(templateHTML, data.data);
+	    			try {
+						var data = JSON.parse(data);
+						var html = Mustache.render(templateHTML, data.data);
+						if(targetID == appViewID) window.scrollTo(0, 0);
+						
+						target[inputMethod](html).fadeIn(70);
+						$( document ).trigger( "pageChange", data);
+					}
+					catch(e) {
+						console.log(e);
+						History.back();
+						$(document).trigger('loadFail');
+					}
 					
-					if(targetID == appViewID) window.scrollTo(0, 0);
-
-					target[inputMethod](html).fadeIn(70);
-					$( document ).trigger( "pageChange", data);
 					ajaxSuccess();
 					clearTimeout(timer);
+					clearTimeout(timerTooLong);
 					
 			},
-			fail: function() {
-				return false;
+			error: function() {
+				History.back();
+				$(document).trigger('loadFail');
 			},
 			complete: function() {
 				return;					

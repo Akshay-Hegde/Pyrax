@@ -16,7 +16,7 @@ class Module_Pyrax extends Module {
 				'en' => 'Pyrax',
 			),
 			'description' => array(
-				'en' => 'Ajaxify your entire site with Mustache templates.',
+				'en' => 'Pyrax helps you to ajaxify your site. Fast, clean and super easy to use. Needs jQuery to be included somewhere!',
 			),
 			'frontend' => false,
 			'backend'  => false,
