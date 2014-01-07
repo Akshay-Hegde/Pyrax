@@ -2,6 +2,7 @@
 	
 	
 	<!-- Here goes your HTML -->
+	<!-- Use Mustache.js tags like [[this]] so you can use the Lex parser tags here as well -->
 	
 
 </script>
